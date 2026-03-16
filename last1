@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>The Last Million Messages</title>
+<style>
+body {
+background: black;
+color: white;
+font-family: Arial;
+text-align: center;
+padding: 60px;
+}
+
+textarea {
+width: 300px;
+height: 120px;
+margin-top: 20px;
+}
+
+button {
+margin-top: 20px;
+padding: 10px 20px;
+font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>THE LAST MILLION MESSAGES</h1>
+
+<p>The Last Million Messages is a digital collection of 1,000,000 final messages people would leave if the world ended tomorrow.</p>
+
+<textarea placeholder="Write your final message..."></textarea>
+
+<br>
+
+<button>Save my message</button>
+
+<p style="margin-top:40px;">0 / 1,000,000 messages</p>
+
+</body>
+</html>
