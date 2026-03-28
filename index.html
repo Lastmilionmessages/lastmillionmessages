@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>The Last Million Messages</title>
+  <meta charset="UTF-8">
+  <title>The Last Million Messages</title>
 </head>
 <body style="background:black;color:white;text-align:center;padding:50px;font-family:Arial;">
 
@@ -9,9 +10,40 @@
 
 <p>If the world ended tomorrow, what would you say?</p>
 
-<textarea style="width:300px;height:100px;"></textarea><br><br>
+<textarea id="message" style="width:300px;height:100px;" placeholder="Write your final message..."></textarea>
 
-<button>Save my message</button>
+<br><br>
+
+<button onclick="saveMessage()">Save my message</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabaseUrl = 'https://fbjptggmqzftvijdry.supabase.co';
+const supabaseKey = 'sb_publishable_0z7GiOROGpKo3XIIfMmVew_QhoQqKDV';
+
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function saveMessage() {
+  const message = document.getElementById("message").value;
+
+  if (!message) {
+    alert("Write something!");
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('messages')
+    .insert([{ message }]);
+
+  if (error) {
+    alert("Error saving message");
+    console.log(error);
+  } else {
+    alert("Message saved!");
+  }
+}
+</script>
 
 </body>
 </html>
