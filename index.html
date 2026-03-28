@@ -5,33 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Last Million Messages</title>
 </head>
-<body style="background:black;color:white;text-align:center;padding:50px;font-family:Arial;">
+<body style="margin:0;background:#0a0a0a;color:white;font-family:system-ui, Arial, sans-serif;">
 
-  <h1>THE LAST MILLION MESSAGES</h1>
-  <p><strong>If the world ended tomorrow, what would you say?</strong></p>
+  <div style="max-width:760px;margin:0 auto;padding:60px 20px 80px 20px;">
 
-  <textarea
-    id="message"
-    style="width:320px;height:120px;"
-    placeholder="Write your final message..."
-  ></textarea>
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-size:13px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:14px;">
+        A digital archive of humanity
+      </div>
 
-  <br><br>
+      <h1 style="font-size:52px;line-height:1.05;margin:0 0 18px 0;">
+        The Last Million Messages
+      </h1>
 
-  <button id="saveBtn" style="padding:10px 20px;font-size:16px;">
-    Save my message
-  </button>
+      <p style="font-size:22px;line-height:1.4;color:#d6d6d6;max-width:680px;margin:0 auto 14px auto;">
+        If the world ended tomorrow, what would you say?
+      </p>
 
-  <br><br>
+      <p style="font-size:16px;color:#9a9a9a;max-width:620px;margin:0 auto;">
+        Leave your message and become part of the final million.
+      </p>
+    </div>
 
-  <button id="randomBtn" style="padding:10px 20px;font-size:16px;">
-    Show random message
-  </button>
+    <div style="background:#111;border:1px solid #222;border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+      <textarea
+        id="message"
+        style="width:100%;height:140px;padding:16px;border-radius:12px;border:1px solid #2a2a2a;background:#0d0d0d;color:white;font-size:18px;box-sizing:border-box;resize:none;"
+        placeholder="Write your final message..."
+      ></textarea>
 
-  <p id="status" style="margin-top:20px;white-space:pre-wrap;"></p>
-  <p id="counter" style="margin-top:20px;font-size:18px;"></p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px;">
+        <button id="saveBtn" style="padding:12px 22px;font-size:16px;border:none;border-radius:12px;background:white;color:black;cursor:pointer;font-weight:600;">
+          Save my message
+        </button>
 
-  <div id="messages" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;"></div>
+        <button id="randomBtn" style="padding:12px 22px;font-size:16px;border:1px solid #333;border-radius:12px;background:#151515;color:white;cursor:pointer;">
+          Show random message
+        </button>
+      </div>
+
+      <p id="status" style="margin-top:18px;white-space:pre-wrap;text-align:center;color:#bcbcbc;"></p>
+      <p id="counter" style="margin-top:12px;font-size:18px;text-align:center;color:#ffffff;"></p>
+    </div>
+
+    <div id="latestSaved" style="margin-top:30px;"></div>
+
+    <div id="messages" style="margin-top:44px;"></div>
+
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -58,6 +79,32 @@
         .replace(/'/g, '&#039;');
     }
 
+    function showLatestSavedMessage(msg) {
+      const box = document.getElementById('latestSaved');
+
+      box.innerHTML = `
+        <div style="border:1px solid #2a2a2a;padding:22px;border-radius:18px;background:#111;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+          <div style="font-size:13px;letter-spacing:1px;color:#8e8e8e;text-transform:uppercase;margin-bottom:10px;">Your message is live</div>
+          <div style="font-size:28px;font-weight:700;margin-bottom:12px;">Message #${msg.id}</div>
+          <div style="font-size:22px;line-height:1.5;margin-bottom:18px;">"${escapeHtml(msg.message)}"</div>
+          <button id="shareLatestBtn" style="padding:12px 18px;font-size:15px;border:none;border-radius:12px;background:white;color:black;cursor:pointer;font-weight:600;">
+            Copy & Share Your Message
+          </button>
+        </div>
+      `;
+
+      document.getElementById('shareLatestBtn').addEventListener('click', async () => {
+        const shareText = `My message before the world ends (#${msg.id}): "${msg.message}" - lastmillionmessages.com`;
+
+        try {
+          await navigator.clipboard.writeText(shareText);
+          alert('Copied! Share it 🔥');
+        } catch {
+          alert(shareText);
+        }
+      });
+    }
+
     let client = null;
 
     try {
@@ -68,44 +115,46 @@
     }
 
     async function loadMessages() {
-      if (!client) {
-        setStatus('Supabase client nije napravljen.');
-        return;
-      }
-
       const { data, error } = await client
         .from('messages')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(12);
 
       if (error) {
         setStatus('Load error: ' + error.message);
         return;
       }
 
-      messagesEl.innerHTML = '<h2 style="margin-bottom:20px;">Latest messages</h2>';
+      messagesEl.innerHTML = `
+        <div style="font-size:14px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:10px;text-align:center;">
+          Latest messages
+        </div>
+      `;
 
       if (!data || data.length === 0) {
-        messagesEl.innerHTML += '<p>No messages yet.</p>';
+        messagesEl.innerHTML += `
+          <div style="background:#111;border:1px solid #222;border-radius:16px;padding:20px;text-align:center;color:#bdbdbd;">
+            No messages yet.
+          </div>
+        `;
         return;
       }
 
       data.forEach((msg) => {
         const card = document.createElement('div');
-        card.style.border = '1px solid #333';
-        card.style.padding = '16px';
-        card.style.marginBottom = '12px';
-        card.style.borderRadius = '8px';
-        card.style.textAlign = 'left';
+        card.style.border = '1px solid #222';
+        card.style.padding = '18px';
+        card.style.marginBottom = '14px';
+        card.style.borderRadius = '16px';
         card.style.background = '#111';
-
-        const safeMessage = escapeHtml(msg.message);
+        card.style.textAlign = 'left';
+        card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
 
         card.innerHTML = `
-          <div style="font-size:14px;color:#aaa;margin-bottom:8px;">Message #${msg.id}</div>
-          <div style="font-size:18px;margin-bottom:12px;">"${safeMessage}"</div>
-          <button class="share-btn" data-id="${msg.id}" data-message="${safeMessage}" style="padding:8px 14px;font-size:14px;">
+          <div style="font-size:13px;color:#8f8f8f;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Message #${msg.id}</div>
+          <div style="font-size:22px;line-height:1.5;margin-bottom:14px;">"${escapeHtml(msg.message)}"</div>
+          <button class="share-btn" data-id="${msg.id}" data-message="${escapeHtml(msg.message)}" style="padding:10px 15px;font-size:14px;border:none;border-radius:10px;background:#fff;color:#000;cursor:pointer;font-weight:600;">
             Copy & Share
           </button>
         `;
@@ -113,10 +162,10 @@
         messagesEl.appendChild(card);
       });
 
-      document.querySelectorAll('.share-btn').forEach((btn) => {
+      document.querySelectorAll('.share-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          const text = btn.getAttribute('data-message')
+          const id = btn.dataset.id;
+          const text = btn.dataset.message
             .replace(/&quot;/g, '"')
             .replace(/&#039;/g, "'")
             .replace(/&lt;/g, '<')
@@ -128,7 +177,7 @@
           try {
             await navigator.clipboard.writeText(shareText);
             alert('Copied! Share it 🔥');
-          } catch (err) {
+          } catch {
             alert(shareText);
           }
         });
@@ -158,7 +207,7 @@
         return;
       }
 
-      if (!data || data.length === 0) {
+      if (data.length === 0) {
         alert('No messages yet.');
         return;
       }
@@ -171,34 +220,29 @@
       const message = messageEl.value.trim();
 
       if (!message) {
-        setStatus('Napiši poruku prvo.');
-        return;
-      }
-
-      if (!client) {
-        setStatus('Supabase client nije napravljen.');
+        setStatus('Write something.');
         return;
       }
 
       setStatus('Saving...');
 
-      try {
-        const { error } = await client
-          .from('messages')
-          .insert([{ message: message }]);
+      const { data, error } = await client
+        .from('messages')
+        .insert([{ message }])
+        .select()
+        .single();
 
-        if (error) {
-          setStatus('Insert error: ' + error.message);
-          return;
-        }
-
-        setStatus('Message saved!');
-        messageEl.value = '';
-        await loadMessages();
-        await loadCounter();
-      } catch (err) {
-        setStatus('Unexpected error: ' + err.message);
+      if (error) {
+        setStatus(error.message);
+        return;
       }
+
+      setStatus('Message saved!');
+      messageEl.value = '';
+
+      showLatestSavedMessage(data);
+      loadMessages();
+      loadCounter();
     });
 
     randomBtn.addEventListener('click', showRandomMessage);
