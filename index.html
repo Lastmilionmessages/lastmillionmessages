@@ -22,7 +22,14 @@
     Save my message
   </button>
 
+  <br><br>
+
+  <button id="randomBtn" style="padding:10px 20px;font-size:16px;">
+    Show random message
+  </button>
+
   <p id="status" style="margin-top:20px;white-space:pre-wrap;"></p>
+  <p id="counter" style="margin-top:20px;font-size:18px;"></p>
 
   <div id="messages" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;"></div>
 
@@ -35,6 +42,8 @@
     const messageEl = document.getElementById('message');
     const saveBtn = document.getElementById('saveBtn');
     const messagesEl = document.getElementById('messages');
+    const counterEl = document.getElementById('counter');
+    const randomBtn = document.getElementById('randomBtn');
 
     function setStatus(text) {
       statusEl.textContent = text;
@@ -88,6 +97,38 @@
       });
     }
 
+    async function loadCounter() {
+      const { count, error } = await client
+        .from('messages')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        setStatus('Counter error: ' + error.message);
+        return;
+      }
+
+      counterEl.textContent = count + ' / 1,000,000 messages';
+    }
+
+    async function showRandomMessage() {
+      const { data, error } = await client
+        .from('messages')
+        .select('*');
+
+      if (error) {
+        setStatus('Random error: ' + error.message);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        alert('No messages yet.');
+        return;
+      }
+
+      const random = data[Math.floor(Math.random() * data.length)];
+      alert('Message #' + random.id + ':\n\n' + random.message);
+    }
+
     saveBtn.addEventListener('click', async () => {
       const message = messageEl.value.trim();
 
@@ -116,12 +157,16 @@
         setStatus('Message saved!');
         messageEl.value = '';
         loadMessages();
+        loadCounter();
       } catch (err) {
         setStatus('Unexpected error: ' + err.message);
       }
     });
 
+    randomBtn.addEventListener('click', showRandomMessage);
+
     loadMessages();
+    loadCounter();
   </script>
 </body>
 </html>
