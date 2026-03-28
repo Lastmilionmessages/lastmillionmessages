@@ -8,7 +8,7 @@
 <body style="background:black;color:white;text-align:center;padding:50px;font-family:Arial;">
 
   <h1>THE LAST MILLION MESSAGES</h1>
-<p><strong>If the world ended tomorrow, what would you say?</strong></p>
+  <p><strong>If the world ended tomorrow, what would you say?</strong></p>
 
   <textarea
     id="message"
@@ -41,12 +41,21 @@
     const statusEl = document.getElementById('status');
     const messageEl = document.getElementById('message');
     const saveBtn = document.getElementById('saveBtn');
+    const randomBtn = document.getElementById('randomBtn');
     const messagesEl = document.getElementById('messages');
     const counterEl = document.getElementById('counter');
-    const randomBtn = document.getElementById('randomBtn');
 
     function setStatus(text) {
       statusEl.textContent = text;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     let client = null;
@@ -89,25 +98,40 @@
         card.style.marginBottom = '12px';
         card.style.borderRadius = '8px';
         card.style.textAlign = 'left';
+        card.style.background = '#111';
+
+        const safeMessage = escapeHtml(msg.message);
+
         card.innerHTML = `
-  <div style="font-size:14px;color:#aaa;margin-bottom:8px;">
-    Message #${msg.id}
-  </div>
+          <div style="font-size:14px;color:#aaa;margin-bottom:8px;">Message #${msg.id}</div>
+          <div style="font-size:18px;margin-bottom:12px;">"${safeMessage}"</div>
+          <button class="share-btn" data-id="${msg.id}" data-message="${safeMessage}" style="padding:8px 14px;font-size:14px;">
+            Copy & Share
+          </button>
+        `;
 
-  <div style="font-size:18px;margin-bottom:10px;">
-    "${msg.message}"
-  </div>
-
-  <button onclick="copyMessage('${msg.message.replace(/'/g, "\\'")}', ${msg.id})">
-    Copy & Share
-  </button>
-`;
-
-  <button onclick="copyMessage('${msg.message.replace(/'/g, "\\'")}', ${msg.id})">
-    Copy & Share
-  </button>
-`;
         messagesEl.appendChild(card);
+      });
+
+      document.querySelectorAll('.share-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const text = btn.getAttribute('data-message')
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+
+          const shareText = `My message before the world ends (#${id}): "${text}" - lastmillionmessages.com`;
+
+          try {
+            await navigator.clipboard.writeText(shareText);
+            alert('Copied! Share it 🔥');
+          } catch (err) {
+            alert(shareText);
+          }
+        });
       });
     }
 
@@ -124,13 +148,6 @@
       counterEl.textContent = count + ' / 1,000,000 messages';
     }
 
-    function copyMessage(text, id) {
-  const shareText = `My message before the world ends (#${id}): "${text}" - lastmillionmessages.com`;
-
-  navigator.clipboard.writeText(shareText);
-
-  alert("Copied! Share it 🔥");
-}
     async function showRandomMessage() {
       const { data, error } = await client
         .from('messages')
@@ -177,8 +194,8 @@
 
         setStatus('Message saved!');
         messageEl.value = '';
-        loadMessages();
-        loadCounter();
+        await loadMessages();
+        await loadCounter();
       } catch (err) {
         setStatus('Unexpected error: ' + err.message);
       }
