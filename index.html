@@ -8,7 +8,7 @@
 <body style="background:black;color:white;text-align:center;padding:50px;font-family:Arial;">
 
   <h1>THE LAST MILLION MESSAGES</h1>
-  <p>If the world ended tomorrow, what would you say?</p>
+<p><strong>If the world ended tomorrow, what would you say?</strong></p>
 
   <textarea
     id="message"
@@ -90,9 +90,23 @@
         card.style.borderRadius = '8px';
         card.style.textAlign = 'left';
         card.innerHTML = `
-          <div style="font-size:14px;color:#aaa;margin-bottom:8px;">Message #${msg.id}</div>
-          <div style="font-size:18px;">${msg.message}</div>
-        `;
+  <div style="font-size:14px;color:#aaa;margin-bottom:8px;">
+    Message #${msg.id}
+  </div>
+
+  <div style="font-size:18px;margin-bottom:10px;">
+    "${msg.message}"
+  </div>
+
+  <button onclick="copyMessage('${msg.message.replace(/'/g, "\\'")}', ${msg.id})">
+    Copy & Share
+  </button>
+`;
+
+  <button onclick="copyMessage('${msg.message.replace(/'/g, "\\'")}', ${msg.id})">
+    Copy & Share
+  </button>
+`;
         messagesEl.appendChild(card);
       });
     }
@@ -110,6 +124,13 @@
       counterEl.textContent = count + ' / 1,000,000 messages';
     }
 
+    function copyMessage(text, id) {
+  const shareText = `My message before the world ends (#${id}): "${text}" - lastmillionmessages.com`;
+
+  navigator.clipboard.writeText(shareText);
+
+  alert("Copied! Share it 🔥");
+}
     async function showRandomMessage() {
       const { data, error } = await client
         .from('messages')
