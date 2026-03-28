@@ -22,7 +22,7 @@
     Save my message
   </button>
 
-  <p id="status" style="margin-top:20px;"></p>
+  <p id="status" style="margin-top:20px;white-space:pre-wrap;"></p>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -37,14 +37,17 @@
       statusEl.textContent = text;
     }
 
-    let client;
+    if (!window.supabase) {
+      setStatus('Greška: Supabase library se nije učitao.');
+    }
+
+    let client = null;
 
     try {
       client = window.supabase.createClient(supabaseUrl, supabaseKey);
       setStatus('App loaded.');
     } catch (e) {
-      console.error('Supabase init error:', e);
-      setStatus('Greška pri učitavanju aplikacije.');
+      setStatus('Init error: ' + e.message);
     }
 
     saveBtn.addEventListener('click', async () => {
@@ -56,7 +59,7 @@
       }
 
       if (!client) {
-        setStatus('Supabase nije učitan.');
+        setStatus('Supabase client nije napravljen.');
         return;
       }
 
@@ -65,19 +68,18 @@
       try {
         const { data, error } = await client
           .from('messages')
-          .insert([{ message: message }]);
+          .insert([{ message: message }])
+          .select();
 
         if (error) {
-          console.error('Insert error:', error);
-          setStatus('Error saving message. Pogledaj console.');
+          setStatus('Insert error:\n' + JSON.stringify(error, null, 2));
           return;
         }
 
-        setStatus('Message saved!');
+        setStatus('Message saved!\n' + JSON.stringify(data, null, 2));
         messageEl.value = '';
       } catch (err) {
-        console.error('Unexpected error:', err);
-        setStatus('Neočekivana greška. Pogledaj console.');
+        setStatus('Unexpected error:\n' + err.message);
       }
     });
   </script>
