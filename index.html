@@ -1,49 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Last Million Messages</title>
 </head>
 <body style="background:black;color:white;text-align:center;padding:50px;font-family:Arial;">
 
-<h1>THE LAST MILLION MESSAGES</h1>
+  <h1>THE LAST MILLION MESSAGES</h1>
+  <p>If the world ended tomorrow, what would you say?</p>
 
-<p>If the world ended tomorrow, what would you say?</p>
+  <textarea
+    id="message"
+    style="width:320px;height:120px;"
+    placeholder="Write your final message..."
+  ></textarea>
 
-<textarea id="message" style="width:300px;height:100px;" placeholder="Write your final message..."></textarea>
+  <br><br>
 
-<br><br>
+  <button id="saveBtn" style="padding:10px 20px;font-size:16px;">
+    Save my message
+  </button>
 
-<button onclick="saveMessage()">Save my message</button>
+  <p id="status" style="margin-top:20px;"></p>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = 'https://fbjptggmqzftvijvdry.supabase.co';
+    const supabaseKey = 'sb_publishable_0z7GiOROGpKo3XIIfMmVew_QhoQqKDV';
 
-<script>
-const supabaseUrl = 'https://fbjptggmqzftvijdry.supabase.co';
-const supabaseKey = 'sb_publishable_0z7GiOROGpKo3XIIfMmVew_QhoQqKDV';
+    const statusEl = document.getElementById('status');
+    const messageEl = document.getElementById('message');
+    const saveBtn = document.getElementById('saveBtn');
 
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
 
-async function saveMessage() {
-  const message = document.getElementById("message").value;
+    let client;
 
-  if (!message) {
-    alert("Write something!");
-    return;
-  }
+    try {
+      client = window.supabase.createClient(supabaseUrl, supabaseKey);
+      setStatus('App loaded.');
+    } catch (e) {
+      console.error('Supabase init error:', e);
+      setStatus('Greška pri učitavanju aplikacije.');
+    }
 
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([{ message }]);
+    saveBtn.addEventListener('click', async () => {
+      const message = messageEl.value.trim();
 
-  if (error) {
-    alert("Error saving message");
-    console.log(error);
-  } else {
-    alert("Message saved!");
-  }
-}
-</script>
+      if (!message) {
+        setStatus('Napiši poruku prvo.');
+        return;
+      }
 
+      if (!client) {
+        setStatus('Supabase nije učitan.');
+        return;
+      }
+
+      setStatus('Saving...');
+
+      try {
+        const { data, error } = await client
+          .from('messages')
+          .insert([{ message: message }]);
+
+        if (error) {
+          console.error('Insert error:', error);
+          setStatus('Error saving message. Pogledaj console.');
+          return;
+        }
+
+        setStatus('Message saved!');
+        messageEl.value = '';
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setStatus('Neočekivana greška. Pogledaj console.');
+      }
+    });
+  </script>
 </body>
 </html>
